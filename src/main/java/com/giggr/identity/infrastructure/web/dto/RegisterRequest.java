@@ -6,6 +6,7 @@ package com.giggr.identity.infrastructure.web.dto;
             String email,
             String phone,
             String dob,
-            String country
+            String country,
+            String entityType
     ) {}
 

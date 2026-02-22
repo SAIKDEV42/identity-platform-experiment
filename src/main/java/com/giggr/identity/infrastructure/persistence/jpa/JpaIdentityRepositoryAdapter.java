@@ -59,6 +59,8 @@ public class JpaIdentityRepositoryAdapter implements IdentityRepository {
         entity.setFirstName(domain.getProfile().firstName());
         entity.setLastName(domain.getProfile().lastName());
         entity.setDateOfBirth(domain.getProfile().dateOfBirth().value());
+        entity.setTermsAccepted(domain.isTermsAccepted());
+        entity.setEntityType(domain.getProfile().entityType());
 
         entity.setState(domain.getState());
         entity.setDigitalId(
@@ -107,6 +109,7 @@ public class JpaIdentityRepositoryAdapter implements IdentityRepository {
         IdentityProfile profile = new IdentityProfile(
                 entity.getFirstName(),
                 entity.getLastName(),
+                entity.getEntityType(),
                 new Email(entity.getEmail()),
                 entity.getPhone(),
                 new DateOfBirth(entity.getDateOfBirth()),
@@ -139,7 +142,8 @@ public class JpaIdentityRepositoryAdapter implements IdentityRepository {
                 verification,
                 consent,
                 entity.getState(),
-                digitalId
+                digitalId,entity.isTermsAccepted()
+
         );
     }
 

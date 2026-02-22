@@ -1,7 +1,6 @@
 package com.giggr.identity.infrastructure.config;
 
 import com.giggr.identity.domain.identity.DigitalIdGenerator;
-import com.giggr.identity.domain.identity.EntityType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -17,7 +16,7 @@ public class IdentityConfig {
 
     @Bean
     public DigitalIdGenerator digitalIdGenerator(Clock clock) {
-        return new DigitalIdGenerator(EntityType.INDIVIDUAL, clock);
+        return new DigitalIdGenerator(clock);
     }
 
 //    @Bean

@@ -1,12 +1,14 @@
 spring:
   datasource:
-    url: jdbc:h2:file:./identitydb
+
+    url: jdbc:h2:file:./identitydb;AUTO_SERVER=TRUE
     driver-class-name: org.h2.Driver
     username: sa
     password:
 
   jpa:
     hibernate:
+
       ddl-auto: update
     show-sql: true
 
