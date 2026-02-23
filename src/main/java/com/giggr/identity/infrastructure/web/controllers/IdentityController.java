@@ -31,13 +31,19 @@ public class IdentityController {
         EntityType entityType =
                 EntityType.valueOf(request.entityType().toUpperCase());
 
+        DateOfBirth dob = null;
+        if (request.dateOfBirth() != null && !request.dateOfBirth().isBlank()) {
+            dob = new DateOfBirth(LocalDate.parse(request.dateOfBirth()));
+        }
+
         IdentityProfile profile = new IdentityProfile(
                 request.firstName(),
                 request.lastName(),
+                request.organizationName(),
                 entityType,
                 new Email(request.email()),
                 request.phone(),
-                new DateOfBirth(LocalDate.parse(request.dob())),
+                dob,
                 request.country()
 
         );

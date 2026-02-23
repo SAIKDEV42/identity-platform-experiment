@@ -156,6 +156,8 @@ public class DigitalIdentity {
             throw new IllegalStateException("Assign ID before accepting terms");
         }
 
+        if (state == IdentityState.ACTIVE) return;
+
         this.termsAccepted = true;
 //        this.termsAcceptedAt = Instant.now(clock);
     }

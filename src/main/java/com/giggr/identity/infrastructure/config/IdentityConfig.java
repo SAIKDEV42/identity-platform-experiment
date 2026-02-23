@@ -19,24 +19,5 @@ public class IdentityConfig {
         return new DigitalIdGenerator(clock);
     }
 
-//    @Bean
-//    CommandLineRunner demo(IdentityService service) {
-//        return args -> {
-//
-//            IdentityProfile profile = new IdentityProfile(
-//                    "Demo",
-//                    "User",
-//                    new Email("demo@test.com"),
-//                    "9999999999",
-//                    new DateOfBirth(LocalDate.of(1995, 1, 1)),
-//                    "UK"
-//            );
-//
-//            OtpCode otp = service.register(profile);
-//            service.verify(profile.email(), otp);
-//            service.activate(profile.email());
-//
-//            System.out.println("Inserted demo identity.");
-//        };
-//    }
+
 }

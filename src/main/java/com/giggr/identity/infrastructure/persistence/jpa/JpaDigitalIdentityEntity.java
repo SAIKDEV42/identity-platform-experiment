@@ -24,7 +24,9 @@ private  boolean termsAccepted;
     private String firstName;
     private String lastName;
 
+    @Column( nullable = true)
     private LocalDate dateOfBirth;
+    private String organizationName;
 
     @Enumerated(EnumType.STRING)
     private EntityType entityType;
@@ -77,6 +79,14 @@ private  boolean termsAccepted;
 
     public LocalDate getDateOfBirth() {
         return dateOfBirth;
+    }
+
+    public String getOrganizationName() {
+        return organizationName;
+    }
+
+    public void setOrganizationName(String organizationName) {
+        this.organizationName = organizationName;
     }
 
     public boolean isTermsAccepted() {
