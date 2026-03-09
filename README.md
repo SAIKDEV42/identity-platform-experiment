@@ -47,6 +47,18 @@ The Identity subsystem is modeled around a **DigitalIdentity aggregate**, which 
 
 ---
 
+## Architecture Goals
+
+The project explores several backend architecture concepts commonly required in large-scale platforms:
+
+- Designing identity systems with strict domain invariants
+- Generating globally unique and time-ordered digital identifiers
+- Separating domain logic from infrastructure frameworks
+- Modeling identity lifecycle and verification workflows
+- Supporting stateless authentication patterns
+
+---
+
 ## Identity Subsystem
 
 The Identity subsystem handles:
