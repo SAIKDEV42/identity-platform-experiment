@@ -1,6 +1,7 @@
 package com.giggr.identity.infrastructure.persistence.jpa;
 
 import com.giggr.identity.domain.consent.ConsentState;
+import com.giggr.identity.domain.identity.EntityType;
 import com.giggr.identity.domain.identity.IdentityState;
 import com.giggr.identity.domain.verification.VerificationState;
 import jakarta.persistence.*;
@@ -19,12 +20,16 @@ public class JpaDigitalIdentityEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
-
+private  boolean termsAccepted;
     private String firstName;
     private String lastName;
 
+    @Column( nullable = true)
     private LocalDate dateOfBirth;
+    private String organizationName;
 
+    @Enumerated(EnumType.STRING)
+    private EntityType entityType;
     private boolean consentRequired;
 
 
@@ -74,6 +79,22 @@ public class JpaDigitalIdentityEntity {
 
     public LocalDate getDateOfBirth() {
         return dateOfBirth;
+    }
+
+    public String getOrganizationName() {
+        return organizationName;
+    }
+
+    public void setOrganizationName(String organizationName) {
+        this.organizationName = organizationName;
+    }
+
+    public boolean isTermsAccepted() {
+        return termsAccepted;
+    }
+
+    public void setTermsAccepted(boolean termsAccepted) {
+        this.termsAccepted = termsAccepted;
     }
 
     public void setDateOfBirth(LocalDate dateOfBirth) {
@@ -138,6 +159,14 @@ public class JpaDigitalIdentityEntity {
 
     public String getPhone() {
         return phone;
+    }
+
+    public EntityType getEntityType() {
+        return entityType;
+    }
+
+    public void setEntityType(EntityType entityType) {
+        this.entityType = entityType;
     }
 
     public void setPhone(String phone) {

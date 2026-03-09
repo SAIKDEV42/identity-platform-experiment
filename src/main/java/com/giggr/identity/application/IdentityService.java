@@ -1,6 +1,7 @@
 package com.giggr.identity.application;
 
 
+import com.giggr.identity.application.port.EmailSender;
 import com.giggr.identity.domain.identity.*;
 import com.giggr.identity.domain.verification.OtpCode;
 import jakarta.transaction.Transactional;
@@ -20,11 +21,14 @@ public class IdentityService {
 
     private final IdentityRepository repository;
 
+    private final EmailSender emailSender;
 
-    public IdentityService(Clock clock, DigitalIdGenerator idGenerator, IdentityRepository repository) {
+
+    public IdentityService(Clock clock, DigitalIdGenerator idGenerator, IdentityRepository repository, EmailSender emailSender) {
         this.clock = clock;
         this.idGenerator = idGenerator;
         this.repository = repository;
+        this.emailSender = emailSender;
     }
 
     public OtpCode register(IdentityProfile profile) {
@@ -59,37 +63,70 @@ public class IdentityService {
         DigitalIdentity identity = new DigitalIdentity(profile, clock);
         OtpCode otp = identity.sendOtp();
         repository.save(identity);
+
+
+        emailSender.sendOtp(
+                identity.getProfile().email().value(),
+                otp.value()
+        );
+
         return otp;
     }
 
 
-    public String verify(Email email, OtpCode otp) {
 
-        DigitalIdentity identity =
-                repository.findByEmail(email)
-                        .orElseThrow(() -> new IllegalStateException("Identity not found"));
-        identity.verifyOtp(otp);
 
-        if (!identity.requiresConsent() && identity.canAssignId()) {
+    public void ensureActive(String email) {
 
-            DigitalId id = idGenerator.generate();
-            identity.assignId(id);
+        DigitalIdentity identity = repository.findByEmail(new Email(email))
+                .orElseThrow(() -> new IllegalStateException("Identity not found"));
+
+        if (!identity.isActive()) {
+            throw new IllegalStateException("Identity not active");
         }
-        repository.save(identity);
-
-
-        return identity.getDigitalId() != null
-                ? identity.getDigitalId().value()
-                : null;
-
     }
 
-    public void activate(Email email) {
+    public String getDigitalId(String email) {
+
+        DigitalIdentity identity = repository.findByEmail(new Email(email))
+                .orElseThrow(() -> new IllegalStateException("Identity not found"));
+
+        return identity.getDigitalId().value();
+    }
+
+
+
+    @Transactional(dontRollbackOn = {IllegalArgumentException.class, IllegalStateException.class})
+    public String verify(Email email, OtpCode inputOtp) {
         DigitalIdentity identity = repository.findByEmail(email)
                 .orElseThrow(() -> new IllegalStateException("Identity not found"));
 
-        identity.activate();
-        repository.save(identity);
+        try {
+            identity.verifyOtp(inputOtp);
+
+            if (!identity.requiresConsent() && identity.canAssignId()) {
+                DigitalId id = idGenerator.generate(identity.getProfile().entityType());
+                identity.assignId(id);
+                tryActivate(identity);
+            }
+
+            repository.save(identity);
+
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            repository.save(identity);
+            throw e;
+        }
+
+        if (identity.getDigitalId() != null) {
+            emailSender.sendDigitalId(
+                    identity.getProfile().email().value(),
+                    identity.getDigitalId().value()
+            );
+        }
+
+        return identity.getDigitalId() != null
+                ? identity.getDigitalId().value()
+                : "requires Consent";
     }
 
     public String approveConsent(Email childEmail) {
@@ -98,13 +135,23 @@ public class IdentityService {
 
         identity.approveConsent();
         if (identity.canAssignId()) {
-            DigitalId id = idGenerator.generate();
+            DigitalId id = idGenerator.generate(identity.getProfile().entityType());
             identity.assignId(id);
+
+
+            tryActivate(identity);
         }
 
         repository.save(identity);
 
-        return identity.getDigitalId().value();
+        emailSender.sendConsentRequest(
+                identity.getConsent().getParentEmail().value(),
+                identity.getProfile().email().value()
+        );
+
+        return identity.getDigitalId() != null ?
+                identity.getDigitalId().value() :
+                "PENDING_ID_ASSIGNMENT";
     }
 
 
@@ -117,6 +164,36 @@ public class IdentityService {
         repository.save(identity);
     }
 
+    public void acceptTerms(Email email) {
 
+        DigitalIdentity identity = repository.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("Identity not found"));
+
+        identity.acceptTerms();
+
+        // Iff everything ready-> activate
+        tryActivate(identity);
+
+
+        repository.save(identity);
+    }
+
+
+    private void tryActivate(DigitalIdentity identity) {
+        if (identity.canActivate()) {
+            identity.activate();
+        }
+    }
+
+
+    public void ensureActiveByDigitalId(String digitalId) {
+
+        DigitalIdentity identity = repository.findByDigitalId(new DigitalId(digitalId))
+                .orElseThrow(() -> new IllegalStateException("Identity not found"));
+
+        if (!identity.isActive()) {
+            throw new IllegalStateException("Identity not active");
+        }
+    }
 }
 

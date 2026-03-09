@@ -58,9 +58,20 @@ public class JpaIdentityRepositoryAdapter implements IdentityRepository {
         entity.setEmail(domain.getProfile().email().value());
         entity.setFirstName(domain.getProfile().firstName());
         entity.setLastName(domain.getProfile().lastName());
-        entity.setDateOfBirth(domain.getProfile().dateOfBirth().value());
 
+        entity.setPhone(domain.getProfile().phone());
+        entity.setCountry(domain.getProfile().country());
+
+        if (domain.getProfile().dateOfBirth() != null) {
+            entity.setDateOfBirth(domain.getProfile().dateOfBirth().value());
+        } else {
+            entity.setDateOfBirth(null);
+        }
+        entity.setTermsAccepted(domain.isTermsAccepted());
+        entity.setEntityType(domain.getProfile().entityType());
+        entity.setOrganizationName(domain.getProfile().organizationName());
         entity.setState(domain.getState());
+
         entity.setDigitalId(
                 domain.getDigitalId() != null
                         ? domain.getDigitalId().value()
@@ -97,20 +108,25 @@ public class JpaIdentityRepositoryAdapter implements IdentityRepository {
     }
 
 
-
-
-
     // mapping methods
 
     private DigitalIdentity toDomain(JpaDigitalIdentityEntity entity) {
 
+        DateOfBirth dob = null;
+        if (entity.getDateOfBirth() != null) {
+            dob = new DateOfBirth(entity.getDateOfBirth());
+        }
+
         IdentityProfile profile = new IdentityProfile(
                 entity.getFirstName(),
                 entity.getLastName(),
+                entity.getOrganizationName(),
+                entity.getEntityType(),
                 new Email(entity.getEmail()),
-                entity.getPhone(),
-                new DateOfBirth(entity.getDateOfBirth()),
-                entity.getCountry()
+                entity.getPhone() == null ? "" :   entity.getPhone(),
+                    dob,
+//                entity.getCountry()
+                entity.getCountry() == null ? "Unknown" : entity.getCountry()
         );
 
         Verification verification = new Verification(
@@ -139,7 +155,8 @@ public class JpaIdentityRepositoryAdapter implements IdentityRepository {
                 verification,
                 consent,
                 entity.getState(),
-                digitalId
+                digitalId, entity.isTermsAccepted()
+
         );
     }
 

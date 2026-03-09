@@ -51,6 +51,15 @@ public class Verification {
 
         Instant now = Instant.now(clock);
 
+        if (lastSentAt != null) {
+            Duration timeSinceLastSent = Duration.between(lastSentAt, now);
+            if (timeSinceLastSent.compareTo(RESEND_THROTTLE) < 0) {// first obj smaller than the second if -ve
+                long secondsToWait = RESEND_THROTTLE.getSeconds() - timeSinceLastSent.getSeconds();
+                throw new IllegalStateException("Please wait " + secondsToWait + " seconds before requesting a new OTP");
+            }
+        }
+
+
         if (lastSentAt != null &&
                 now.isBefore(lastSentAt.plus(RESEND_THROTTLE))) {
             throw new IllegalStateException("OTP resend too soon");
@@ -61,17 +70,18 @@ public class Verification {
         this.lastSentAt = now;
         this.attempts = 0;
         this.state = VerificationState.OTP_SENT;
-        return  this.otpCode;
+        return this.otpCode;
 
     }
 
     public void verify(OtpCode inputOtp) {
         if (state == VerificationState.VERIFIED) {
-            return; // idempotent
+            //return; // idempotent
+            throw new IllegalStateException("Verification already completed");
         }
 
         if (state != VerificationState.OTP_SENT) {
-            throw new IllegalStateException("OTP not active");
+            throw new IllegalStateException("not active OTP found");
         }
 
         Instant now = Instant.now(clock);
@@ -119,6 +129,7 @@ public class Verification {
     public Instant getOtpExpiry() {
         return otpExpiry;
     }
+
 
     private OtpCode generateOtp() {
 

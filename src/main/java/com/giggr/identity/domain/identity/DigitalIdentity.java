@@ -17,38 +17,47 @@ public class DigitalIdentity {
     private final IdentityProfile profile;
     private final Verification verification;
 
-
+    private boolean termsAccepted;
 
     public DigitalIdentity(IdentityProfile profile, Clock clock) {
         this.profile = Objects.requireNonNull(profile, "Profile required");
-        this.verification = new Verification(clock);
-        // DigitalIdGenerator idGenerator;
 
         LocalDate today = LocalDate.now(clock);
 
-        int age = profile.dateOfBirth().years(today);
+        profile.validateEligibility(today);
 
-        if (age < 8) {
-            throw new IllegalStateException("Below minimum age");
-        }
-
-        boolean requiresConsent = age >= 8 && age < 18;
+        boolean requiresConsent = profile.entityType() == EntityType.INDIVIDUAL
+                && profile.dateOfBirth().isMinor(today);
         this.consent = new Consent(requiresConsent, clock);
 
+        if (!this.requiresConsent() && profile.email().isPublicProvider()) {
+            throw new IllegalArgumentException("Adults must provide a valid company email address.");
+        }
+
+        this.verification = new Verification(clock);
+        // DigitalIdGenerator idGenerator;
+
         this.state = IdentityState.PROSPECT;
+        this.termsAccepted = false;
+
     }
+
     public DigitalIdentity(
             IdentityProfile profile,
             Verification verification,
             Consent consent,
             IdentityState state,
-            DigitalId digitalId
+            DigitalId digitalId,
+            boolean termsAccepted
+
+
     ) {
         this.profile = profile;
         this.verification = verification;
         this.consent = consent;
         this.state = state;
         this.digitalId = digitalId;
+        this.termsAccepted = termsAccepted;
     }
 
 
@@ -91,7 +100,12 @@ public class DigitalIdentity {
         return state == IdentityState.VERIFIED && digitalId == null;
     }
 
-
+    public boolean canActivate() {
+        return state == IdentityState.VERIFIED
+                && digitalId != null
+                && consent.isSatisfied()
+                && termsAccepted;
+    }
 
 
     public boolean requiresConsent() {
@@ -106,7 +120,17 @@ public class DigitalIdentity {
         consent.approve();
     }
 
+
+//    public boolean readyForActivation() {
+//        return state == IdentityState.VERIFIED
+//                && digitalId != null
+//                && consent.isSatisfied()
+//                && termsAccepted;
+//    }
+
     public void activate() {
+
+        if (state == IdentityState.ACTIVE) return;
 
         if (state != IdentityState.VERIFIED) {
             throw new IllegalStateException("Identity must be verified before activation");
@@ -120,10 +144,23 @@ public class DigitalIdentity {
             throw new IllegalStateException("Consent not satisfied");
         }
 
+        if (!termsAccepted) {
+            throw new IllegalStateException("Terms not accepted");
+        }
+
         this.state = IdentityState.ACTIVE;
     }
 
+    public void acceptTerms() {
+        if (digitalId == null) {
+            throw new IllegalStateException("Assign ID before accepting terms");
+        }
 
+        if (state == IdentityState.ACTIVE) return;
+
+        this.termsAccepted = true;
+//        this.termsAcceptedAt = Instant.now(clock);
+    }
 
     public IdentityState getState() {
         return state;
@@ -152,6 +189,10 @@ public class DigitalIdentity {
 
     public Verification getVerification() {
         return verification;
+    }
+
+    public boolean isTermsAccepted() {
+        return termsAccepted;
     }
 }
 

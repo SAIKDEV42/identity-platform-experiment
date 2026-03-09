@@ -12,18 +12,17 @@ public class DigitalIdGenerator {
 
     private static final int MAX_SEQUENCE = 99;
 
-    private final EntityType entityType;
+    //private final EntityType entityType;
     private final Clock clock;
 
     private long lastTimestamp = -1L;
     private int sequence = 0;
 
-    public DigitalIdGenerator(EntityType entityType, Clock clock) {
-        this.entityType = Objects.requireNonNull(entityType, "EntityType required");
-        this.clock = Objects.requireNonNull(clock, "Clock required");
+    public DigitalIdGenerator( Clock clock) {
+         this.clock = Objects.requireNonNull(clock, "Clock required");
     }
 
-    public synchronized DigitalId generate() {
+    public synchronized DigitalId generate(EntityType entityType) {
 
         long currentTimestamp = currentTimeMillis();
 
