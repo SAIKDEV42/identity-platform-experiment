@@ -1,78 +1,114 @@
 # Identity & Authentication Prototype
 
-Backend architecture experiment exploring scalable identity systems using Java, Domain Driven Design, and Clean Architecture.
+Backend architecture experiment exploring scalable identity systems using **Java**, **Domain Driven Design (DDD)**, and **Clean Architecture**.
 
-This repository contains an experimental backend implementation inspired by large-scale platform identity systems.
+This repository contains an experimental backend implementation inspired by how large platforms design **identity and authentication subsystems**.
 
-The focus of this project is to explore how a large-scale identity system could be designed using **Domain Driven Design (DDD)** and **Clean Architecture** principles.
-
-The implementation currently focuses on **identity creation, OTP verification, digital identity generation, and stateless login concepts**.
+The project focuses on modeling **identity creation, OTP verification, digital identity generation, and stateless authentication concepts** while keeping the **domain logic independent from infrastructure frameworks**.
 
 ---
 
 ## Status
 
-🚧 Experimental prototype  
-Current focus: **Identity and Authentication subsystem**
+🚧 Experimental prototype
+
+**Current focus:**
+
+- Identity creation  
+- OTP verification  
+- Digital identity generation  
+- Stateless authentication concepts  
+
+This project is intended as an **architecture exploration**, not a production-ready identity service.
 
 ---
 
 ## Overview
 
-The project implements the early foundation required for a **Sign-Up and Identity Creation flow** commonly found in large platforms.
+Most large platforms rely on a dedicated **identity subsystem** responsible for:
 
-Typical steps include:
+- Creating and managing user identities  
+- Verifying ownership of credentials  
+- Generating globally unique identifiers  
+- Managing authentication state  
 
-1. Sign up using email and phone
-2. Authenticate the identity
-3. Receive a **unique digital identity**
-4. Be able to sign in securely
+This repository explores how such a subsystem can be designed using **Domain Driven Design** and **Clean Architecture principles**.
 
-This repository explores how such a system could be implemented in a backend service.
+The implementation models the **foundational identity flow commonly required in modern platforms**.
 
 ---
 
 ## Architecture Approach
 
-The project follows **Domain Driven Design and Clean Architecture principles**.
+The project follows **Domain Driven Design (DDD)** and **Clean Architecture**.
 
-The design focuses on:
+The design emphasizes:
 
-- Domain-first modeling
-- Aggregate-based state management
-- Explicit business invariants
-- Separation between domain and infrastructure layers
+- Domain-first modeling  
+- Aggregate-based lifecycle management  
+- Explicit business invariants  
+- Clear separation between domain and infrastructure layers  
 
-The Identity subsystem is modeled around a **DigitalIdentity aggregate**, which owns the lifecycle of identity creation and verification.
-
----
-
-## Architecture Goals
-
-The project explores several backend architecture concepts commonly required in large-scale platforms:
-
-- Designing identity systems with strict domain invariants
-- Generating globally unique and time-ordered digital identifiers
-- Separating domain logic from infrastructure frameworks
-- Modeling identity lifecycle and verification workflows
-- Supporting stateless authentication patterns
+The core of the system is the **DigitalIdentity aggregate**, which controls the lifecycle of identity creation and verification.
 
 ---
 
-## Identity Subsystem
+## Design Goals
 
-The Identity subsystem handles:
+This prototype explores backend architecture concepts commonly required in large-scale platforms:
 
-- User identity creation
-- OTP-based verification
-- Digital identity generation
-- Identity state transitions
+- Designing identity systems with strong domain invariants  
+- Generating globally unique and time-ordered digital identifiers  
+- Separating domain logic from infrastructure frameworks  
+- Modeling identity lifecycle and verification workflows  
+- Supporting stateless authentication patterns  
 
-The domain model enforces important rules such as:
+---
 
-- Digital ID can only be generated **after OTP verification**
+## Identity Lifecycle
+
+The identity subsystem models a controlled lifecycle for creating and activating identities.
+
+```
+User Signup Request
+        ↓
+Identity Created (Pending Verification)
+        ↓
+OTP Issued
+        ↓
+OTP Verified
+        ↓
+Digital ID Generated
+        ↓
+Identity Activated
+        ↓
+User Can Authenticate
+```
+
+### Lifecycle Rules Enforced by the Domain Model
+
+- An identity begins in a **pending verification state**
+- OTP verification confirms **ownership of credentials**
+- Digital IDs are generated **only after successful verification**
+- Identity activation allows the user to **authenticate**
+- All lifecycle transitions are controlled by the **DigitalIdentity aggregate**
+
+---
+
+## Identity Subsystem Responsibilities
+
+The identity subsystem manages:
+
+- Identity creation  
+- OTP-based verification  
+- Digital identity generation  
+- Identity lifecycle state transitions  
+
+### Domain Invariants
+
+- Digital IDs can only be generated **after OTP verification**
 - Identity state transitions are controlled inside the aggregate
-- Domain logic remains independent from frameworks
+- Domain logic remains independent from infrastructure frameworks
 
 ---
 
@@ -80,42 +116,47 @@ The domain model enforces important rules such as:
 
 The system generates a **unique 18-digit Digital ID**.
 
-Structure:
+### Structure
 
-
+```
 EEE TTTTTTTTTTTTT SS
-
+```
 
 Where:
 
 - `EEE` → Entity type code  
 - `TTTTTTTTTTTTT` → Timestamp (milliseconds since custom epoch)  
-- `SS` → Sequence number  
+- `SS` → Per-millisecond sequence number  
 
-This design ensures:
+### Design Properties
 
-- Uniqueness
-- Ordering
-- High generation throughput
+- Globally unique identifiers  
+- Natural ordering by creation time  
+- High ID generation throughput  
+
+ 
+ID generation is handled by a  **stateful domain service (`DigitalIdGenerator`)** , 
+which ensures timestamp ordering and per-millisecond sequence management.
 
 ---
 
-## Stateless Login Concept
+## Stateless Authentication Concept
 
-The authentication model explores a **stateless login design**.
+ The authentication model explores a **stateless login approach** where 
+authentication state is not stored in server sessions but inferred from 
+verification and device metadata.
 
-The system keeps track of:
+The system records metadata such as:
 
-- Login attempts
-- Device identification
-- Authentication verification
+- Login attempts  
+- Device identifiers  
+- Verification state  
 
-Device tracking allows detection of unusual login activity and improves account security.
+Device tracking can help detect unusual login behavior and improve account security.
 
 ---
 
 ## Project Structure
-
 
 ```
 src/main/java/com/giggr
@@ -135,68 +176,77 @@ infrastructure/
   configuration/
 ```
 
+### Domain Layer
 
-The structure separates:
+- Contains business rules  
+- Defines aggregates and domain services  
 
-- **Domain logic**
-- **Application orchestration**
-- **Infrastructure concerns**
+### Application Layer
 
+- Orchestrates use cases  
+- Coordinates domain operations  
 
+### Infrastructure Layer
+
+- Handles persistence  
+- Provides framework integration  
 
 ---
 
 ## Technology Stack
 
-- Java
-- Spring Boot
-- H2 Database
-- Maven
+- Java  
+- Spring Boot  
+- Maven  
+- H2 Database  
 
-The system currently runs using a **file-based H2 database** for simplicity.
+The system currently uses a **file-based H2 database** for simplicity during experimentation.
 
 ---
 
 ## How to Run
 
-Clone the repository:
+### Clone the repository
 
-
+```
 git clone https://github.com/SAIKDEV42/identity-platform-experiment.git
+```
 
+### Navigate to the project directory
 
-Navigate to the project directory:
-
-
+```
 cd identity-platform-experiment
+```
 
+### Run the application
 
-Run the application:
-
-
+```
 mvn spring-boot:run
-
+```
 
 ---
 
-## Current Features
+## Implemented Concepts
 
-Implemented features:
+This prototype currently explores several backend architecture ideas:
 
-- Identity aggregate modeling
-- OTP verification flow
-- Digital identity generation logic
-- Stateless login tracking
-- Device tracking
+- Identity aggregate modeling  
+- OTP verification workflow  
+- Digital identity generation  
+- Stateless authentication exploration  
+- Device-based login tracking  
 
 ---
 
 ## Future Work
 
-Possible future extensions include:
+Possible extensions for this system include:
 
-- Campaign-based sign-up flows
-- Organization onboarding
-- Team member management
-- Application workflows
-- Approval and evaluation pipelines
+- Organization onboarding  
+- Team member management  
+- Role-based authorization  
+- Identity federation  
+- Multi-tenant identity support  
+- Additional identity flows (minor / adult / organization)
+
+---
